@@ -4,3 +4,4 @@
 *.bak
 *.log
 domain-names-2020-*.txt
+__pycache__/*
