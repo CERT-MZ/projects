@@ -1,0 +1,112 @@
+#!/usr/bin/python3
+import io
+import requests
+import zipfile
+import random
+import time
+import shutil
+import os
+from os import path
+from subprocess import call
+from datetime import datetime
+from datetime import date, timedelta
+from lxml import etree
+
+
+# iluminati proxy configuration
+username = 'lum-customer-hl_2e223739-zone-static'
+password = 'oof9leujkpew'
+port = 22225
+
+session_id = random.random()
+
+my_proxy = ('http://%s-session-%s:%s@zproxy.lum-superproxy.io:%d' % (username, session_id, password, port))
+proxyDict = {
+             "http"  : my_proxy,
+             "https" : my_proxy
+            }
+
+
+def git_push():
+
+    call('git -C add .', shell = True)
+    call('git -C commit -m "daily update"', shell = True)
+    call('git -C push origin master', shell = True)
+
+
+def moveFile():
+
+    today = date.today().strftime("%Y-%m-%d")
+    yesterday = date.today() - timedelta(days=1)
+    yesterday = yesterday.strftime('%Y-%m-%d')
+
+    file = "/home/ubuntu/domains/projects/Domain-squatting/domain-names.txt"
+    file_old = "/home/ubuntu/domains/projects/Domain-squatting/domain-names-" + yesterday + ".txt"
+
+    if path.exists(file):
+        src = path.realpath(file)
+        print("New file:", src)
+        os.rename(file, file_old)
+
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M")
+
+    return True
+
+
+def download():
+
+    URL = 'https://www.whoisdownload.com/newly-registered-domains'
+
+    today = date.today().strftime("%Y-%m-%d")
+
+
+    session_headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+URL         'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-User': '?1',
+        'Sec-Fetch-Dest': 'document'
+    }
+
+    session = requests.Session()
+    response1 = session.get(URL, headers=session_headers, proxies=proxyDict)
+    print("response 1:", response1)
+
+    dom = etree.HTML(response1.text)
+    print("dom:", dom)
+
+    index = 0
+    for row in dom.xpath("//div[@class='post_content']//div[@id='table_wraper']//table[@class='cart_table table table-striped table-bordered']/tbody/tr"):
+        cells = row.xpath("./td")
+        links = row.xpath("./td[@class='price_td']/div[@class='add_cart']/a[@class='btn btn-success']")
+        print("cells:", cells[2].text.strip())
+
+        if cells[2].text.strip() == today and len(links)>0:
+            response2 = session.get(links[0].attrib['href'], headers=session_headers)
+            print("URL to download:", links[0].attrib['href'])
+
+
+            filebytes = io.BytesIO(response2.content)
+            myzipfile = zipfile.ZipFile(filebytes)
+            for name in myzipfile.namelist():
+                uncompressed = myzipfile.read(name)
+                #output = open('domain-names.txt','wb')
+                output = open('/home/ubuntu/domains/projects/Domain-squatting/domain-names.txt','wb')
+                output.write(uncompressed)
+                output.close()
+
+        index = index + 1
+
+    x = 1
+
+
+
+print("-------------")
+print("+ openSquat +")
+print("-------------")
+
+moveFile()
+download()
+#git_push()
