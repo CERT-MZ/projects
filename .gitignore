@@ -3,5 +3,6 @@
 *.old
 *.bak
 *.log
+*.md5
 domain-names-2020-*.txt
 __pycache__/*
