@@ -4,5 +4,6 @@
 *.bak
 *.log
 *.md5
+*.csv
 domain-names-2020-*.txt
 __pycache__/*
